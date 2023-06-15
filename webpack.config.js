@@ -8,20 +8,6 @@ const isProd = process.env.NODE_ENV === 'production'
 const isDev = !isProd
 
 const filename = (ext) => isDev ? `bundle.${ext}` : `bundle.[hash].${ext}`
-const jsLoader = () => {
-  const loaders = [
-    {
-      loader: 'babel-loader',
-      options: {
-        preset: ['@babel/preset-env']
-      }
-    }
-  ]
-  if (isDev) {
-    loaders.push('eslint-loader')
-  }
-  return loaders
-}
 
 module.exports = {
   context: path.resolve(__dirname, 'src'),
@@ -29,7 +15,7 @@ module.exports = {
   entry: ['@babel/polyfill', './index.js'],
   devtool: isDev ? 'source-map' : false,
   devServer: {
-    port: 3000,
+    port: 8081,
     hot: isDev
   },
   resolve: {
@@ -71,21 +57,30 @@ module.exports = {
       {
         test: /\.s[ac]ss$/i,
         use: [
-          {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-              hmr: isDev,
-              reloadAll: true
-            }
-          },
+          'style-loader',
           'css-loader',
-          'sass-loader'
+          {
+            loader: 'sass-loader'
+          },
+
         ]
       },
       {
-        test: /\.m?js$/,
+        test: /\.(?:js|mjs|cjs)$/,
         exclude: /node_modules/,
-        use: jsLoader()
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', {targets: 'defaults'}]
+            ]
+          }
+        }
+      },
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: ['eslint-loader']
       }
     ]
   }
